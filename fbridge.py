@@ -66,7 +66,8 @@ def listen(fbClient):
                         else:
                             threadType = ThreadType.USER
 
-                        fbClient.send(Message(text=jmsg["text"]), thread_id=fbThread, thread_type=threadType)
+                        infoText = "%s %s" % (jmsg["username"], jmsg["text"])
+                        fbClient.send(Message(text=infoText), thread_id=fbThread, thread_type=threadType)
         r.Close()
 
 
