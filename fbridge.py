@@ -2,6 +2,7 @@ import json
 import requests
 from threading import Thread
 import toml
+import re
 
 from fbchat import log, Client
 from fbchat.models import ThreadType, Message 
@@ -12,6 +13,25 @@ revThreads = dict() # Reverse lookup
 
 username = ""
 password = ""
+
+def dealCommand(text):
+    scan = re.match('^\[(.+?)\]', text)
+    if not scan: return
+
+    if scan[1] == 'name':
+        dealCommandName(text)
+
+def dealCommandName(text):
+    token = text.split(' ')
+    if len(token) < 3: return
+
+    author_id = token[1]
+    name = token[2]
+    users[author_id] = name
+    writeUserMap(users)
+
+def writeUserMap(users):
+    log(str(users))
 
 ## Send message to matterBridge
 def sendMsg(username, gateway, text):
@@ -43,6 +63,7 @@ class FBListener(Client):
         gateway = "FBgateway"
         if thread_id in threads:
             gateway = threads[thread_id]
+            dealCommand(message_object.text)
 
         sendMsg(username, gateway, message_object.text)
 
@@ -52,7 +73,7 @@ def listen(fbClient):
             r = requests.get('http://localhost:4242/api/stream', stream=True)
             for msg in r.iter_lines():
                 if msg:
-                    print(msg)
+                    # print(msg)
                     jmsg = json.loads(msg)
                     if jmsg["gateway"] == "":
                         continue
